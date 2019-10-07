@@ -52,16 +52,12 @@ class SpriteFactors(abstract_renderer.AbstractRenderer):
     """Renders a list of sprites into a list of sprite factors.
 
     Args:
-      sprites: a list of sprites with a method `get_sprite`. This method
-        receives a single argument `upscale_factor`, and returns a pygame
-        sprite.
+      sprites: a list of sprites
       global_state: Unused global state.
 
     Returns:
       A list of dictionaries of factor -> values mappings.
     """
-    del global_state
-
     # Set number of sprites so that observation_spec is callable
     self._num_sprites = len(sprites)
 
@@ -93,19 +89,14 @@ class SpritePassthrough(abstract_renderer.AbstractRenderer):
     """Sends the sprites (e.g. list of Sprites) directly through.
 
     Args:
-      sprites: a list of sprites with a method `get_sprite`. This method
-        receives a single argument `upscale_factor`, and returns a pygame
-        sprite.
+      sprites: a list of sprites
       global_state: Unused global state.
 
     Returns:
       A numpy array containing the concatenation of all desired attributes of
         all sprites.
     """
-    del global_state
-
     self._num_sprites = len(sprites)
-
     return sprites
 
   def observation_spec(self):
@@ -125,7 +116,7 @@ class Success(abstract_renderer.AbstractRenderer):
     Returns:
       Boolean indicating success.
     """
-    return global_state['success']
+    return global_state[0]['success']
 
   def observation_spec(self):
     return specs.Array(shape=(), dtype=np.bool)

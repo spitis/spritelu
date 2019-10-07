@@ -134,10 +134,9 @@ class Environment(dm_env.Environment):
 
   def observation(self):
     state = self.state()
-    observation = {
-        name: renderer.render(**state)
-        for name, renderer in six.iteritems(self._renderers)
-    }
+    observation = {}
+    for name, renderer in six.iteritems(self._renderers):
+      observation[name] = renderer.render(state['sprites'], (state['global_state'], observation))
     return observation
 
   def observation_spec(self):

@@ -63,7 +63,9 @@ class Sprite(object):
                c1=0,
                c2=0,
                x_vel=0.0,
-               y_vel=0.0):
+               y_vel=0.0,
+               goal_x=0.5,
+               goal_y=0.5):
     """Construct sprite.
 
     This class is agnostic to the color scheme, namely (c1, c2, c3) could be in
@@ -83,8 +85,11 @@ class Sprite(object):
       c2: Scalar. Third coordinate of color.
       x_vel: Float. x-velocity.
       y_vel: Float. y-velocity.
+      goal_x: Float in [0, 1]. target x-position.
+      goal_y: Float in [0, 1]. target y-position.
     """
     self._position = np.array([x, y])
+    self._goal_position = np.array([goal_x, goal_y])
     self._shape = shape
     self._angle = angle
     self._scale = scale
@@ -114,6 +119,10 @@ class Sprite(object):
     """Check if the point is contained in the Sprite."""
     return self._centered_path.contains_point(point - self.position)
 
+  def distance_to_goal(self):
+    """returns distance to goal"""
+    return np.linalg.norm(self._postiion - self._goal_position)
+
   def sample_contained_position(self):
     """Sample random position uniformly within sprite."""
     low = np.min(self._centered_path.vertices, axis=0)
@@ -129,6 +138,12 @@ class Sprite(object):
   def vertices(self):
     """Numpy array of vertices of the shape."""
     transform = mpl_transforms.Affine2D().translate(*self._position)
+    path = transform.transform_path(self._centered_path)
+    return path.vertices
+
+  @property
+  def goal_vertices(self):
+    transform = mpl_transforms.Affine2D().translate(*self._goal_position)
     path = transform.transform_path(self._centered_path)
     return path.vertices
 

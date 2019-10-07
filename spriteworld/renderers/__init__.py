@@ -21,3 +21,4 @@ from spriteworld.renderers.handcrafted import SpriteFactors
 from spriteworld.renderers.handcrafted import SpritePassthrough
 from spriteworld.renderers.handcrafted import Success
 from spriteworld.renderers.pil_renderer import PILRenderer
+from spriteworld.renderers.goal_renderers import AchievedGoalRenderer, PILGoalRenderer

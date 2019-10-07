@@ -232,7 +232,7 @@ class Navigate(object):
   agent desires to move or accelerate in.
   """
 
-  def __init__(self, step_size=0.03, motion_cost=1., accelerate=False):
+  def __init__(self, step_size=0.05, action_noise_percent=0.1, motion_cost=1., accelerate=False):
     """Constructor.
 
     Args:
@@ -241,6 +241,9 @@ class Navigate(object):
     """
     self._step_size = step_size
     self._motion_cost = motion_cost
+    self._action_noise = action_noise_percent
+    if accelerate:
+      raise NotImplementedError
     self._accelerate = accelerate
 
     self._action_spec = specs.BoundedArray((2,), np.float32, -1., 1.)
@@ -256,7 +259,7 @@ class Navigate(object):
   def get_intersecting_sprites(self, sprites):
     body_position = self.get_body_sprite(sprites).position
     res = []
-    for sprite in self.get_non_body_sprites(sprites)[::-1]:
+    for sprite in self.get_non_body_sprites(sprites):
       if sprite.contains_point(body_position):
         res.append(sprite)
     return res
@@ -265,8 +268,7 @@ class Navigate(object):
     """Take an action and move the sprites.
 
     Args:
-      action: Iterable of length 2. First component must be in [0, 1] and second
-        component must be in [0, 1, 2, 3].
+      action: 2d movement
       sprites: Iterable of sprite.Sprite() instances. sprites[-1] is the agent's
         body.
       keep_in_frame: Bool. Whether to force sprites to stay in the frame by
@@ -276,10 +278,18 @@ class Navigate(object):
       Scalar cost of taking this action.
     """
 
+    # Add action noise
+    action *= (1 + np.random.uniform(low=-self._action_noise, high=self._action_noise, size=2))
+
     # Move agent body
     self.get_body_sprite(sprites).move(action * self._step_size, keep_in_frame=keep_in_frame)
+    
+    # If move is slow enough, also move intersecting sprites
+    if np.all(np.abs(action) < 0.8):
+      for sprite in self.get_intersecting_sprites(sprites):
+        sprite.move(action * self._step_size, keep_in_frame=keep_in_frame)
 
-    return -self._motion_cost * self._step_size
+    return -self._motion_cost
 
   def sample(self):
     """Sample an action uniformly randomly."""

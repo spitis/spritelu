@@ -43,5 +43,5 @@ class AbstractRenderer(object):
 
     Returns:
       ArraySpec or nested structure of such. Must agree with the output of
-        self.update().
+        self.render().
     """
