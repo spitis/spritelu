@@ -219,3 +219,71 @@ class Embodied(object):
 
   def action_spec(self):
     return self._action_spec
+
+
+
+class Navigate(object):
+  """Continuous navigation action.
+
+  This action space treats sprites[-1] (the foreground sprite) as the agent's
+  body.
+
+  Each action is a vector in [-1, 1] x [-1, 1], which specifies the direction the
+  agent desires to move or accelerate in.
+  """
+
+  def __init__(self, step_size=0.03, motion_cost=1., accelerate=False):
+    """Constructor.
+
+    Args:
+      step_size: Fraction of the arena width the sprite moves for each step.
+      motion_cost: Each step incurs cost motion_cost * step_size.
+    """
+    self._step_size = step_size
+    self._motion_cost = motion_cost
+    self._accelerate = accelerate
+
+    self._action_spec = specs.BoundedArray((2,), np.float32, -1., 1.)
+    
+  def get_body_sprite(self, sprites):
+    """Return the sprite representing the agent's body."""
+    return sprites[-1]
+
+  def get_non_body_sprites(self, sprites):
+    """Return all sprites except that representing the agent's body."""
+    return sprites[:-1]
+
+  def get_intersecting_sprites(self, sprites):
+    body_position = self.get_body_sprite(sprites).position
+    res = []
+    for sprite in self.get_non_body_sprites(sprites)[::-1]:
+      if sprite.contains_point(body_position):
+        res.append(sprite)
+    return res
+
+  def step(self, action, sprites, keep_in_frame=True):
+    """Take an action and move the sprites.
+
+    Args:
+      action: Iterable of length 2. First component must be in [0, 1] and second
+        component must be in [0, 1, 2, 3].
+      sprites: Iterable of sprite.Sprite() instances. sprites[-1] is the agent's
+        body.
+      keep_in_frame: Bool. Whether to force sprites to stay in the frame by
+        clipping their centers of mass to be in [0, 1].
+
+    Returns:
+      Scalar cost of taking this action.
+    """
+
+    # Move agent body
+    self.get_body_sprite(sprites).move(action * self._step_size, keep_in_frame=keep_in_frame)
+
+    return -self._motion_cost * self._step_size
+
+  def sample(self):
+    """Sample an action uniformly randomly."""
+    return np.random.rand(2) * 2. - 1.
+
+  def action_spec(self):
+    return self._action_spec
