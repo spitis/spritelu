@@ -97,7 +97,7 @@ class Environment(dm_env.Environment):
     for sprite in self._sprites:
       sprite.update_position(keep_in_frame=self._keep_in_frame)
 
-    reward += self._task.reward(self._sprites)render
+    reward += self._task.reward(self._sprites)
     observation = self.observation()
 
     if self.should_terminate():
