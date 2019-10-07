@@ -25,7 +25,6 @@ from spriteworld import constants
 from spriteworld import sprite as sprite_lib
 from spriteworld.renderers import abstract_renderer
 
-
 class SpriteFactors(abstract_renderer.AbstractRenderer):
   """Aggregates factors of the sprites into an array."""
 
@@ -120,3 +119,30 @@ class Success(abstract_renderer.AbstractRenderer):
 
   def observation_spec(self):
     return specs.Array(shape=(), dtype=np.bool)
+
+
+class VectorizedPositions(abstract_renderer.AbstractRenderer):
+  """Aggregates positions of the sprites into an array."""
+
+  def __init__(self):
+    """Constructor.
+    """
+    self._num_sprites = None
+
+  def render(self, sprites=(), global_state=None):
+    """Renders a list of sprites into an array where every two components is an xy position.
+
+    Args:
+      sprites: a list of sprites
+      global_state: Unused global state.
+
+    Returns:
+      An array of sprite positions
+    """
+    # Set number of sprites so that observation_spec is callable
+    self._num_sprites = len(sprites)
+
+    return np.array([sprite.position for sprite in sprites]).flatten()
+
+  def observation_spec(self):
+    return specs.Array(shape=(self._num_sprites,), dtype=np.float32)

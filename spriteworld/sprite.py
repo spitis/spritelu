@@ -218,6 +218,10 @@ class Sprite(object):
     return self._position
 
   @property
+  def goal_position(self):
+    return self._goal_position
+
+  @property
   def velocity(self):
     return self._velocity
 

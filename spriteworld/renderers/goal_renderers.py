@@ -6,7 +6,7 @@ from __future__ import print_function
 
 from dm_env import specs
 import numpy as np
-from spriteworld.renderers import abstract_renderer
+from spriteworld.renderers import abstract_renderer, VectorizedPositions
 from spriteworld.renderers import PILRenderer
 from PIL import Image
 
@@ -45,3 +45,23 @@ class PILGoalRenderer(PILRenderer):
     # that.
     image = np.flipud(np.array(image))
     return image
+
+
+class VectorizedGoalPositions(VectorizedPositions):
+  """Aggregates positions of the sprites into an array."""
+
+
+  def render(self, sprites=(), global_state=None):
+    """Renders a list of sprites into an array where every two components is an xy position.
+
+    Args:
+      sprites: a list of sprites
+      global_state: Unused global state.
+
+    Returns:
+      An array of sprite goal_positions
+    """
+    # Set number of sprites so that observation_spec is callable
+    self._num_sprites = len(sprites)
+
+    return np.array([sprite.goal_position for sprite in sprites]).flatten()

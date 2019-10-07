@@ -17,8 +17,6 @@
 
 from spriteworld.renderers import color_maps
 from spriteworld.renderers.abstract_renderer import AbstractRenderer
-from spriteworld.renderers.handcrafted import SpriteFactors
-from spriteworld.renderers.handcrafted import SpritePassthrough
-from spriteworld.renderers.handcrafted import Success
+from spriteworld.renderers.handcrafted import SpriteFactors, SpritePassthrough, Success, VectorizedPositions
 from spriteworld.renderers.pil_renderer import PILRenderer
-from spriteworld.renderers.goal_renderers import AchievedGoalRenderer, PILGoalRenderer
+from spriteworld.renderers.goal_renderers import AchievedGoalRenderer, PILGoalRenderer, VectorizedGoalPositions
