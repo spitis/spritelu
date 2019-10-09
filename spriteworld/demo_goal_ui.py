@@ -264,7 +264,7 @@ def setup_run_ui(env_config, render_size, task_hsv_colors, anti_aliasing):
 
   while True:
     target = agent.step(timestep)
-    action = np.clip((target - env._sprites[-1].position)*2., -1., 1.)
+    action = np.clip((target - env._sprites[-1].position)*4., -1., 1.)
     logging.info('Taking action: {}'.format(action))
     timestep = env.step(action)
     ui.update(timestep, np.concatenate((env._sprites[-1].position, target)))

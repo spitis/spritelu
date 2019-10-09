@@ -53,7 +53,7 @@ import os, copy
 
 GOAL_ENV_IMAGE_RENDERERS = {
   'observation': renderers.PILRenderer((100,100)),
-  'achieved_goal': renderers.AchievedGoalRenderer(),
+  'achieved_goal': renderers.AchievedPILGoalRenderer((100,100)),
   'desired_goal': renderers.PILGoalRenderer((100, 100))
 }
 s1 = sprite.Sprite(0.25, 0.25, 'triangle', c0=140,c1=220, c2=80, goal_x=0.1, goal_y=0.1)

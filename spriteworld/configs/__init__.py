@@ -15,9 +15,9 @@ def task():
 
 def image_renderers():
   return {
-    'observation': spriteworld_renderers.PILRenderer((100,100)),
-    'achieved_goal': spriteworld_renderers.AchievedPILGoalRenderer((100,100)),
-    'desired_goal': spriteworld_renderers.PILGoalRenderer((100, 100))
+    'observation': spriteworld_renderers.PILRenderer((64,64), anti_aliasing=5),
+    'achieved_goal': spriteworld_renderers.AchievedPILGoalRenderer((64,64), anti_aliasing=5),
+    'desired_goal': spriteworld_renderers.PILGoalRenderer((64, 64), anti_aliasing=5)
   }
 
 def disentangled_renderers():
@@ -53,7 +53,7 @@ simple_sprites = lambda: copy.deepcopy((s3, s4))
 test_config = {
     'task': tasks.SparseGoalPlacement(),
     'action_space': action_spaces.Navigate(),
-    'renderers': GOAL_ENV_IMAGE_RENDERERS,
+    'renderers': image_renderers(),
     'init_sprites': init_sprites,
     'max_episode_length': 1000,
     'metadata': {
@@ -63,7 +63,7 @@ test_config = {
 simple_config = {
     'task': tasks.SparseGoalPlacement(),
     'action_space': action_spaces.Navigate(),
-    'renderers': GOAL_ENV_IMAGE_RENDERERS,
+    'renderers': image_renderers(),
     'init_sprites': simple_sprites,
     'max_episode_length': 1000,
     'metadata': {
