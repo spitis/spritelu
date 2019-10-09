@@ -146,3 +146,33 @@ class VectorizedPositions(abstract_renderer.AbstractRenderer):
 
   def observation_spec(self):
     return specs.Array(shape=(self._num_sprites,), dtype=np.float32)
+
+class FunctionOfVectorizedPositions(abstract_renderer.AbstractRenderer):
+  """Aggregates positions of the sprites into an array."""
+
+  def __init__(self, fn):
+    """Constructor.
+    """
+    self._fn = fn
+    self._observation_spec = specs.Array(shape=(), dtype=np.object)
+
+  def render(self, sprites=(), global_state=None):
+    """Renders a list of sprites into an array where every two components is an xy position.
+
+    Args:
+      sprites: a list of sprites
+      global_state: Unused global state.
+
+    Returns:
+      An array of sprite positions
+    """
+    # Set number of sprites so that observation_spec is callable
+    vec_pos = np.array([sprite.position for sprite in sprites]).flatten()
+    obs = self._fn(vec_pos)
+    
+    if self._observation_spec is None:
+      self._observation_spec = specs.Array(shape=obs.shape, dtype=obs.dtype)
+    return obs
+
+  def observation_spec(self):
+    return self._observation_spec
