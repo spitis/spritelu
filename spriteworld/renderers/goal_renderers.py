@@ -6,14 +6,14 @@ from __future__ import print_function
 
 from dm_env import specs
 import numpy as np
-from spriteworld.renderers import abstract_renderer, VectorizedPositions
+from spriteworld.renderers import abstract_renderer, VectorizedPositions, FunctionOfVectorizedPositions 
 from spriteworld.renderers import PILRenderer
 from PIL import Image
 
-class AchievedGoalRenderer(abstract_renderer.AbstractRenderer):
+class AchievedObservationRenderer(abstract_renderer.AbstractRenderer):
   """Renders a copy of the observation."""
 
-  def __init__(self):
+  def __init__(self, render_nongoals=False):
     """Constructor."""
     self._observation_spec = specs.Array(shape=(), dtype=np.object)
 
@@ -47,6 +47,10 @@ class PILGoalRenderer(PILRenderer):
     image = np.flipud(np.array(image))
     return image
 
+class AchievedPILGoalRenderer(PILRenderer):
+  def render(self, sprites=(), global_state=None):
+    goal_sprites = [sprite for sprite in sprites if sprite._goal]
+    return super().render(goal_sprites, global_state)
 
 class VectorizedGoalPositions(abstract_renderer.AbstractRenderer):
   """Aggregates positions of the sprites into an array."""
@@ -75,6 +79,12 @@ class VectorizedGoalPositions(abstract_renderer.AbstractRenderer):
 
   def observation_spec(self):
     return specs.Array(shape=(self._num_sprites,), dtype=np.float32)
+
+
+class AchievedVectorizedPositions(VectorizedPositions):
+  def render(self, sprites=(), global_state=None):
+    goal_sprites = [sprite for sprite in sprites if sprite._goal]
+    return super().render(goal_sprites, global_state)
 
 class FunctionOfVectorizedGoalPositions(abstract_renderer.AbstractRenderer):
   """Aggregates positions of the sprites into an array."""
@@ -107,3 +117,9 @@ class FunctionOfVectorizedGoalPositions(abstract_renderer.AbstractRenderer):
 
   def observation_spec(self):
     return self._observation_spec
+
+
+class AchievedFunctionOfVectorizedPositions(FunctionOfVectorizedPositions):
+  def render(self, sprites=(), global_state=None):
+    goal_sprites = [sprite for sprite in sprites if sprite._goal]
+    return super().render(goal_sprites, global_state)
