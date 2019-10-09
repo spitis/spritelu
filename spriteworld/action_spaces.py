@@ -264,6 +264,17 @@ class Navigate(object):
         res.append(sprite)
     return res
 
+  def split_sprites(self, sprites):
+    """splits sprites into barrier and non-barrier sprites"""
+    barriers = []
+    nonbarriers = []
+    for sprite in sprites:
+      if sprite.is_barrier:
+        barriers.append(sprite)
+      else:
+        nonbarriers.append(sprite)
+    return barriers, nonbarriers
+
   def step(self, action, sprites, keep_in_frame=True):
     """Take an action and move the sprites.
 
@@ -277,17 +288,19 @@ class Navigate(object):
     Returns:
       Scalar cost of taking this action.
     """
+    barriers, nonbarriers = self.split_sprites(sprites)
 
     # Add action noise
     action *= (1 + np.random.uniform(low=-self._action_noise, high=self._action_noise, size=2))
 
-    # Move agent body
-    self.get_body_sprite(sprites).move(action * self._step_size, keep_in_frame=keep_in_frame)
-    
-    # If move is slow enough, also move intersecting sprites
+    # If move is slow enough, move intersecting sprites
     if np.all(np.abs(action) < 0.8):
-      for sprite in self.get_intersecting_sprites(sprites):
-        sprite.move(action * self._step_size, keep_in_frame=keep_in_frame)
+      for sprite in self.get_intersecting_sprites(nonbarriers):
+        sprite.move(action * self._step_size, keep_in_frame=keep_in_frame, barriers=barriers)
+
+    # Move agent body, rejecting bad moves
+    agent = self.get_body_sprite(sprites)
+    agent.move(action * self._step_size, keep_in_frame=keep_in_frame, barriers=barriers)
 
     return -self._motion_cost
 

@@ -65,7 +65,8 @@ class Sprite(object):
                x_vel=0.0,
                y_vel=0.0,
                goal_x=0.5,
-               goal_y=0.5):
+               goal_y=0.5,
+               is_barrier=False):
     """Construct sprite.
 
     This class is agnostic to the color scheme, namely (c1, c2, c3) could be in
@@ -95,6 +96,10 @@ class Sprite(object):
     self._scale = scale
     self._color = (c0, c1, c2)
     self._velocity = (x_vel, y_vel)
+    self._is_barrier = is_barrier
+    if is_barrier:
+      self._color = (255, 255, 255)
+      self._goal_position = self._position
 
     self._reset_centered_path()
 
@@ -105,11 +110,17 @@ class Sprite(object):
         mpl_transforms.Affine2D().rotate_deg(self._angle))
     self._centered_path = scale_rotate.transform_path(path)
 
-  def move(self, motion, keep_in_frame=False):
+  def move(self, motion, keep_in_frame=False, barriers=[]):
     """Move the sprite, optionally keeping its centerpoint within the frame."""
+    old_position = self._position.copy()
     self._position += motion
     if keep_in_frame:
       self._position = np.clip(self._position, 0.0, 1.0)
+    if barriers:
+      for sprite in barriers:
+        if sprite.contains_point(self._position):
+          self._position = old_position
+          break
 
   def update_position(self, keep_in_frame=False):
     """Update position based on velocity."""
@@ -121,7 +132,7 @@ class Sprite(object):
 
   def distance_to_goal(self):
     """returns distance to goal"""
-    return np.linalg.norm(self._postiion - self._goal_position)
+    return np.linalg.norm(self._position - self._goal_position)
 
   def sample_contained_position(self):
     """Sample random position uniformly within sprite."""
@@ -172,6 +183,10 @@ class Sprite(object):
   @property
   def angle(self):
     return self._angle
+
+  @property
+  def is_barrier(self):
+    return self._is_barrier
 
   @angle.setter
   def angle(self, a):
