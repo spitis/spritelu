@@ -33,7 +33,8 @@ class PILRenderer(abstract_renderer.AbstractRenderer):
                image_size=(64, 64),
                anti_aliasing=1,
                bg_color=None,
-               color_to_rgb=None):
+               color_to_rgb=None,
+               render_nongoals=False):
     """Construct PIL renderer.
 
     Args:
@@ -63,6 +64,8 @@ class PILRenderer(abstract_renderer.AbstractRenderer):
 
     self._canvas = Image.new('RGB', self._canvas_size)
     self._draw = ImageDraw.Draw(self._canvas)
+
+    self._render_nongoals = render_nongoals
 
   def render(self, sprites=(), global_state=None):
     """Render sprites.

@@ -40,7 +40,7 @@ class MatplotlibUI(object):
 
   def __init__(self):
     self.rewards = 10 * [np.nan]
-    self.rewards_bounds = [-10, 10]
+    self.rewards_bounds = [-1, 0]
     self.last_success = None
 
     plt.ion()
@@ -264,7 +264,7 @@ def setup_run_ui(env_config, render_size, task_hsv_colors, anti_aliasing):
 
   while True:
     target = agent.step(timestep)
-    action = np.clip(target - env._sprites[-1].position, -1., 1.)
+    action = np.clip((target - env._sprites[-1].position)*2., -1., 1.)
     logging.info('Taking action: {}'.format(action))
     timestep = env.step(action)
     ui.update(timestep, np.concatenate((env._sprites[-1].position, target)))

@@ -80,6 +80,23 @@ class NoReward(AbstractTask):
   def success(self, unused_sprites):
     return False
 
+class SparseGoalPlacement(AbstractTask):
+  """Used for environments that have no task. Reward is always 0."""
+
+  def __init__(self, epsilon=0.05):
+    self._epsilon = epsilon
+
+  def reward(self, sprites):
+    """Calculate reward from sprites."""
+    for sprite in sprites:
+      if sprite._goal:
+        if sprite.distance_to_goal() > self._epsilon:
+          return 0.
+    return 1.
+
+  def success(self, sprites):
+    return bool(self.reward(sprites))
+
 
 class FindGoalPosition(AbstractTask):
   """Used for tasks that require moving some sprites to a goal position."""

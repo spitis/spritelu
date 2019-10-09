@@ -34,9 +34,10 @@ class PILGoalRenderer(PILRenderer):
   def render(self, sprites=(), global_state=None):
     self._canvas.paste(self._canvas_bg)
     for obj in sprites:
-      vertices = self._canvas_size * obj.goal_vertices
-      color = self._color_to_rgb(obj.color)
-      self._draw.polygon([tuple(v) for v in vertices], fill=color)
+      if obj._goal or self._render_nongoals:
+        vertices = self._canvas_size * obj.goal_vertices
+        color = self._color_to_rgb(obj.color)
+        self._draw.polygon([tuple(v) for v in vertices], fill=color)
     image = self._canvas.resize(self._image_size, resample=Image.ANTIALIAS)
 
     # PIL uses a coordinate system with the origin (0, 0) at the upper-left, but
@@ -47,9 +48,14 @@ class PILGoalRenderer(PILRenderer):
     return image
 
 
-class VectorizedGoalPositions(VectorizedPositions):
+class VectorizedGoalPositions(abstract_renderer.AbstractRenderer):
   """Aggregates positions of the sprites into an array."""
 
+  def __init__(self, render_nongoals=False):
+    """Constructor.
+    """
+    self._num_sprites = None
+    self._render_nongoals = render_nongoals
 
   def render(self, sprites=(), global_state=None):
     """Renders a list of sprites into an array where every two components is an xy position.
@@ -64,16 +70,21 @@ class VectorizedGoalPositions(VectorizedPositions):
     # Set number of sprites so that observation_spec is callable
     self._num_sprites = len(sprites)
 
-    return np.array([sprite.goal_position for sprite in sprites]).flatten()
+    return np.array([sprite.goal_position for sprite in sprites if 
+      (sprite._goal or self._render_nongoals)]).flatten()
+
+  def observation_spec(self):
+    return specs.Array(shape=(self._num_sprites,), dtype=np.float32)
 
 class FunctionOfVectorizedGoalPositions(abstract_renderer.AbstractRenderer):
   """Aggregates positions of the sprites into an array."""
 
-  def __init__(self, fn):
+  def __init__(self, fn, render_nongoals=False):
     """Constructor.
     """
     self._fn = fn
     self._observation_spec = specs.Array(shape=(), dtype=np.object)
+    self._render_nongoals = render_nongoals
 
   def render(self, sprites=(), global_state=None):
     """Renders a list of sprites into an array where every two components is an xy position.
@@ -86,7 +97,8 @@ class FunctionOfVectorizedGoalPositions(abstract_renderer.AbstractRenderer):
       An array of sprite positions
     """
     # Set number of sprites so that observation_spec is callable
-    vec_pos = np.array([sprite.goal_position for sprite in sprites]).flatten()
+    vec_pos = np.array([sprite.goal_position for sprite in sprites if 
+      (sprite._goal or self._render_nongoals)]).flatten()
     obs = self._fn(vec_pos)
     
     if self._observation_spec is None:

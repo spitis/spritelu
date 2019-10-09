@@ -64,8 +64,8 @@ class Sprite(object):
                c2=0,
                x_vel=0.0,
                y_vel=0.0,
-               goal_x=0.5,
-               goal_y=0.5,
+               goal_x=None,
+               goal_y=None,
                is_barrier=False):
     """Construct sprite.
 
@@ -99,9 +99,12 @@ class Sprite(object):
     self._is_barrier = is_barrier
     if is_barrier:
       self._color = (255, 255, 255)
-      self._goal_position = self._position
-
     self._reset_centered_path()
+
+    self._goal = True
+    if self._goal_position[0] is None:
+      self._goal = False
+
 
   def _reset_centered_path(self):
     path = mpl_path.Path(constants.SHAPES[self._shape])
@@ -132,7 +135,9 @@ class Sprite(object):
 
   def distance_to_goal(self):
     """returns distance to goal"""
-    return np.linalg.norm(self._position - self._goal_position)
+    if self._goal:
+      return np.linalg.norm(self._position - self._goal_position)
+    return 0.
 
   def sample_contained_position(self):
     """Sample random position uniformly within sprite."""
@@ -234,7 +239,10 @@ class Sprite(object):
 
   @property
   def goal_position(self):
-    return self._goal_position
+    if self._goal:
+      return self._goal_position
+    else:
+      return self._position
 
   @property
   def velocity(self):
