@@ -35,7 +35,7 @@ from absl import flags
 from spriteworld import demo_ui, demo_goal_ui
 
 FLAGS = flags.FLAGS
-flags.DEFINE_string('config', 'spriteworld.configs.cobra.clustering',
+flags.DEFINE_string('config', 'spriteworld.configs.protoge.goal_general',
                     'Module name of task config to use.')
 flags.DEFINE_string('mode', 'train', 'Task mode, "train" or "test"]')
 flags.DEFINE_boolean('task_hsv_colors', True,
@@ -45,6 +45,8 @@ flags.DEFINE_boolean('simple_config', True,
 flags.DEFINE_integer('render_size', 256,
                      'Height and width of the output image.')
 flags.DEFINE_integer('anti_aliasing', 10, 'Renderer anti-aliasing factor.')
+flags.DEFINE_integer('level', 0,
+                     'Difficulty level for the config.')
 
 
 
@@ -92,13 +94,16 @@ simple_config = {
 
 def main(_):
   config = importlib.import_module(FLAGS.config)
-  config = config.get_config(FLAGS.mode)
-  if FLAGS.simple_config:
-    demo_goal_ui.setup_run_ui(simple_config, FLAGS.render_size, False,
+  config = config.get_config(FLAGS.mode, FLAGS.level)
+  demo_goal_ui.setup_run_ui(config, FLAGS.render_size, False,
                        FLAGS.anti_aliasing)
-  else:
-    demo_goal_ui.setup_run_ui(test_config, FLAGS.render_size, False,
-                       FLAGS.anti_aliasing)
+
+  # if FLAGS.simple_config:
+  #   demo_goal_ui.setup_run_ui(simple_config, FLAGS.render_size, False,
+  #                      FLAGS.anti_aliasing)
+  # else:
+  #   demo_goal_ui.setup_run_ui(test_config, FLAGS.render_size, False,
+  #                      FLAGS.anti_aliasing)
   #demo_ui.setup_run_ui(config, FLAGS.render_size, FLAGS.task_hsv_colors,
   #                     FLAGS.anti_aliasing)
 
