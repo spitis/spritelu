@@ -66,7 +66,8 @@ class Sprite(object):
                y_vel=0.0,
                goal_x=None,
                goal_y=None,
-               is_barrier=False):
+               is_barrier=False,
+               barrier_stretch=1.):
     """Construct sprite.
 
     This class is agnostic to the color scheme, namely (c1, c2, c3) could be in
@@ -99,6 +100,7 @@ class Sprite(object):
     self._is_barrier = is_barrier
     if is_barrier:
       self._color = (255, 255, 255)
+    self._barrier_stretch = barrier_stretch
     self._reset_centered_path()
 
     self._goal = True
@@ -109,7 +111,7 @@ class Sprite(object):
   def _reset_centered_path(self):
     path = mpl_path.Path(constants.SHAPES[self._shape])
     scale_rotate = (
-        mpl_transforms.Affine2D().scale(self._scale) +
+        mpl_transforms.Affine2D().scale(self._scale*self._barrier_stretch, self._scale) +
         mpl_transforms.Affine2D().rotate_deg(self._angle))
     self._centered_path = scale_rotate.transform_path(path)
 

@@ -23,6 +23,40 @@ import itertools
 import numpy as np
 from spriteworld import sprite
 
+MAX_TRIES = 1000
+
+def resample_if_in_barrier(sprite_generator):
+  """resamples from the sprite_generator if it generates an initial position where
+  any of the non-barrier sprites are inside a barrier"""
+
+  def _generate():
+    for _ in range(MAX_TRIES):
+      sprites = sprite_generator()
+      barriers = []
+      nonbarriers = []
+      for s in sprites:
+        if s.is_barrier:
+          barriers.append(s)
+        else:
+          nonbarriers.append(s)
+      
+      good_generation = True
+      for s in nonbarriers:
+        for barrier in barriers:
+          if barrier.contains_point(s.position):
+            good_generation = False
+            break
+          elif s._goal and barrier.contains_point(s.goal_position):
+            good_generation = False
+            break
+      
+      if good_generation:
+        break
+
+    return sprites
+
+  return _generate
+
 
 def generate_sprites(factor_dist, num_sprites=1):
   """Create callable that samples sprites from a factor distribution.

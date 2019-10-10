@@ -60,6 +60,24 @@ def image_renderers():
     'desired_goal': spriteworld_renderers.PILGoalRenderer((64, 64), anti_aliasing=5)
   }
 
+def disentangled_renderers():
+  return {
+    'observation': spriteworld_renderers.VectorizedPositions(),
+    'achieved_goal': spriteworld_renderers.AchievedVectorizedPositions(),
+    'desired_goal': spriteworld_renderers.VectorizedGoalPositions()
+  }
+
+def random_vector_renderers():
+
+  random_mtx = (np.random.rand(100, 100) - 0.5)*2.
+  fn=lambda a: np.dot(random_mtx[:len(a),:len(a)], a)
+
+  return {
+    'observation': spriteworld_renderers.VectorizedPositions(),
+    'achieved_goal': spriteworld_renderers.AchievedFunctionOfVectorizedPositions(fn=fn),
+    'desired_goal': spriteworld_renderers.FunctionOfVectorizedGoalPositions(fn=fn)
+  }
+
 def get_config(mode='train', level=0):
   """Generate environment config.
 
@@ -107,6 +125,8 @@ def get_config(mode='train', level=0):
       # Have barriers
       barrier_factors = distribs.Product([
         shared_factors,
+        distribs.Continuous('barrier_stretch', 2., 10.),
+        distribs.Continuous('angle', 0., 90),
         distribs.Discrete('is_barrier', [True])
       ])
       barrier_sprite_gen = sprite_generators.generate_sprites(
@@ -143,8 +163,8 @@ def get_config(mode='train', level=0):
   sprite_gen = sprite_generators.shuffle(sprite_gen)
   
   # Add the agent in at the end
-  sprite_gen = sprite_generators.chain_generators(sprite_gen, 
-                                                agent_sprite_gen)
+  sprite_gen = sprite_generators.resample_if_in_barrier(
+    sprite_generators.chain_generators(sprite_gen, agent_sprite_gen))
 
   config = {
     'task': tasks.SparseGoalPlacement(epsilon=TERMINATE_DISTANCE),
