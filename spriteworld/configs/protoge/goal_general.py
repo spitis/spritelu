@@ -94,9 +94,9 @@ def get_config(mode='train', level=0):
   shared_factors = distribs.Product([
     distribs.Continuous('x', 0.1, 0.9),
     distribs.Continuous('y', 0.1, 0.9),
-    distribs.Continuous('c0', 0, 255),
-    distribs.Continuous('c1', 0, 255),
-    distribs.Continuous('c2', 0, 255)
+    distribs.Continuous('c0', 25, 230),
+    distribs.Continuous('c1', 25, 230),
+    distribs.Continuous('c2', 25, 230)
   ])
 
   goal_loc = distribs.Product([
