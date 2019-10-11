@@ -94,7 +94,7 @@ class MatplotlibUI(object):
   def _draw_observation(self, image, action):
     """Draw the latest observation."""
     self._ax_image.clear()
-    self._ax_image.imshow(image, interpolation='none')
+    self._ax_image.imshow(255 - image, interpolation='none')
     self._ax_image.set_xticks([])
     self._ax_image.set_yticks([])
     if action is not None:
@@ -123,7 +123,7 @@ class MatplotlibUI(object):
   def _draw_goal(self, image):
     """Draw the latest observation."""
     self._ax_goal.clear()
-    self._ax_goal.imshow(image, interpolation='none')
+    self._ax_goal.imshow(255 - image, interpolation='none')
     self._ax_goal.set_xticks([])
     self._ax_goal.set_yticks([])
 
