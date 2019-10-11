@@ -126,7 +126,7 @@ def get_config(mode='train', level=0):
       barrier_factors = distribs.Product([
         shared_factors,
         distribs.Continuous('barrier_stretch', 2., 10.),
-        distribs.Continuous('angle', 0., 90),
+        distribs.Continuous('angle', 0., 360),
         distribs.Discrete('is_barrier', [True])
       ])
       barrier_sprite_gen = sprite_generators.generate_sprites(
