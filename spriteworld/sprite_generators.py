@@ -79,6 +79,37 @@ def generate_sprites(factor_dist, num_sprites=1):
   return _generate
 
 
+def generate_nonintersecting_sprites(factor_dist, num_sprites=1, epsilon=0.1):
+  """Create callable that samples sprites from a factor distribution.
+
+  Args:
+    factor_dist: The factor distribution from which to sample. Should be an
+      instance of factor_distributions.AbstractDistribution.
+    num_sprites: Int or callable returning int. Number of sprites to generate
+      per call.
+
+  Returns:
+    _generate: Callable that returns a list of Sprites.
+  """
+
+  def _generate():
+    n = num_sprites() if callable(num_sprites) else num_sprites
+    sprites = []
+    while len(sprites) < num_sprites:
+      s = sprite.Sprite(**factor_dist.sample())
+      accept=True
+      for other_s in sprites:
+        if np.linalg.norm(s.position - other_s.position) < epsilon:
+          accept=False
+          break
+      if accept:
+        sprites.append(s)
+    sprites = [sprite.Sprite(**factor_dist.sample()) for _ in range(n)]
+    return sprites
+
+  return _generate
+
+
 def chain_generators(*sprite_generators):
   """Chain generators by concatenating output sprite sequences.
 
@@ -158,5 +189,22 @@ def shuffle(sprite_generator):
     order = np.arange(len(sprites))
     np.random.shuffle(order)
     return [sprites[i] for i in order]
+
+  return _generate
+
+def sort_by_color(sprite_generator):
+  """Sort sprites from generator by color (in order c1, c2, c3)
+
+  Args:
+    sprite_generator: Callable return a list of sprites.
+
+  Returns:
+    _generate: Callable sprite generator.
+  """
+
+  def _generate():
+    sprites = sprite_generator()
+    
+    return sorted(sprites, key=lambda x: (x.c0, x.c1, x.c2))
 
   return _generate

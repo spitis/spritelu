@@ -66,6 +66,7 @@ class Sprite(object):
                y_vel=0.0,
                goal_x=None,
                goal_y=None,
+               move_noise=0,
                is_barrier=False,
                barrier_stretch=1.):
     """Construct sprite.
@@ -103,6 +104,7 @@ class Sprite(object):
     self._barrier_stretch = barrier_stretch
     self._reset_centered_path()
 
+    self._move_noise = move_noise
     self._goal = True
     if self._goal_position[0] is None:
       self._goal = False
@@ -115,15 +117,24 @@ class Sprite(object):
         mpl_transforms.Affine2D().rotate_deg(self._angle))
     self._centered_path = scale_rotate.transform_path(path)
 
-  def move(self, motion, keep_in_frame=False, barriers=[]):
+  def move(self, motion, keep_in_frame=False, barriers=[], prevent_intersect=-1):
     """Move the sprite, optionally keeping its centerpoint within the frame."""
     old_position = self._position.copy()
     self._position += motion
+    if self._move_noise:
+      self._position += np.random.normal(
+          loc=0.0, scale=self._move_noise, size=self._position.shape)
+
     if keep_in_frame:
       self._position = np.clip(self._position, 0.0, 1.0)
     if barriers:
       for sprite in barriers:
-        if sprite.contains_point(self._position):
+        if sprite is self:
+          continue
+        elif prevent_intersect > 0 and np.linalg.norm(self._position - sprite.position) < prevent_intersect:
+          self._position = old_position
+          break
+        elif sprite.contains_point(self._position):
           self._position = old_position
           break
 

@@ -46,7 +46,7 @@ class SelectMove(object):
   There is an optional control cost proportional to the norm of the motion.
   """
 
-  def __init__(self, scale=1.0, motion_cost=0.0, noise_scale=None):
+  def __init__(self, scale=1.0, motion_cost=0.0, noise_scale=None, move_all=False, prevent_intersect=-1):
     """Constructor.
 
     Args:
@@ -61,6 +61,8 @@ class SelectMove(object):
     self._noise_scale = noise_scale
     self._action_spec = specs.BoundedArray(
         shape=(4,), dtype=np.float32, minimum=0.0, maximum=1.0)
+    self._move_all = move_all
+    self._prevent_intersect = prevent_intersect
 
   def get_motion(self, action):
     delta_pos = (action[2:] - 0.5) * self._scale
@@ -71,8 +73,7 @@ class SelectMove(object):
       noise = np.random.normal(
           loc=0.0, scale=self._noise_scale, size=action.shape)
       return action + noise
-    else:
-      return action
+    return action
 
   def get_sprite_from_position(self, position, sprites):
     for sprite in sprites[::-1]:
@@ -94,13 +95,19 @@ class SelectMove(object):
     Returns:
       Scalar cost of taking this action.
     """
+    if self._prevent_intersect > 0:
+      barriers = sprites
+    else:
+      barriers = []
     noised_action = self.apply_noise_to_action(action)
     position = noised_action[:2]
     motion = self.get_motion(noised_action)
     clicked_sprite = self.get_sprite_from_position(position, sprites)
     if clicked_sprite is not None:
-      clicked_sprite.move(motion, keep_in_frame=keep_in_frame)
-
+      clicked_sprite.move(motion, keep_in_frame=keep_in_frame, barriers=barriers, prevent_intersect=self._prevent_intersect)
+    if self._move_all:
+      for sprite in sprites:
+        sprite.move(0., keep_in_frame, barriers=barriers, prevent_intersect=self._prevent_intersect)
     return -self._motion_cost * np.linalg.norm(motion)
 
   def sample(self):
