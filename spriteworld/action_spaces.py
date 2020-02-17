@@ -25,6 +25,63 @@ from __future__ import print_function
 from dm_env import specs
 import numpy as np
 
+class SelectBounce(object):
+  """Select-Bounce action space.
+
+  This action space takes a continuous position of length 2, with each component
+  in [0, 1]. This can be intuited as representing a single click (x, y) coordinate. 
+
+  If there is a sprite where the screen is clicked, that sprite's velocities are 
+  reversed.
+  """
+
+  def __init__(self, noise_scale=0.01, prevent_intersect=0.1):
+    """Constructor.
+
+    Args:
+      scale: Multiplier by which the motion is scaled down. Should be in [0.0, 1.0].
+      noise_scale: Optional stddev of the noise. If scalar, applied to all
+        action space components. If vector, must have same shape as action.
+    """
+    self._noise_scale = noise_scale
+    self._action_spec = specs.BoundedArray(shape=(2,), dtype=np.float32, minimum=0.0, maximum=1.0)
+    self._prevent_intersect = prevent_intersect
+
+  def get_sprite_from_position(self, position, sprites):
+    for sprite in sprites:
+      if sprite.contains_point(position):
+        return sprite
+    return None
+
+  def step(self, action, sprites, *unused_args, **unused_kwargs):
+    """Take an action and move the sprites.
+
+    Args:
+      action: Numpy array of shape (2,) in [0, 1]. 
+      sprites: Iterable of sprite.Sprite() instances.
+
+    Returns:
+      Scalar cost of taking this action.
+    """
+    if self._prevent_intersect > 0:
+      barriers = sprites
+    else:
+      barriers = []
+    clicked_sprite = self.get_sprite_from_position(action, sprites)
+    if clicked_sprite is not None:
+      clicked_sprite.reverse_velocity(self._noise_scale)
+    for sprite in sprites:
+      sprite.update_position(keep_in_frame=True, barriers=barriers, prevent_intersect=self._prevent_intersect)
+    return 0.
+
+  def sample(self):
+    """Sample an action uniformly randomly."""
+    return np.random.uniform(0., 1., size=(2,))
+
+  def action_spec(self):
+    return self._action_spec
+
+
 
 class SelectMove(object):
   """Select-Move action space.
@@ -226,7 +283,6 @@ class Embodied(object):
 
   def action_spec(self):
     return self._action_spec
-
 
 
 class Navigate(object):

@@ -208,3 +208,14 @@ def sort_by_color(sprite_generator):
     return sorted(sprites, key=lambda x: (x.c0, x.c1, x.c2))
 
   return _generate
+
+def fix_colors(sprite_generator, colors):
+  """Assigns colors to the sprites in sprite_generator (must be same length!)
+  """ 
+
+  def _generate():
+    sprites = sprite_generator()
+    
+    return [s.set_color(c) for s, c in zip(sprites, colors)]
+
+  return _generate

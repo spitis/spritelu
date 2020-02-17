@@ -68,7 +68,8 @@ class Sprite(object):
                goal_y=None,
                move_noise=0,
                is_barrier=False,
-               barrier_stretch=1.):
+               barrier_stretch=1.,
+               max_abs_vel=0.08):
     """Construct sprite.
 
     This class is agnostic to the color scheme, namely (c1, c2, c3) could be in
@@ -97,7 +98,8 @@ class Sprite(object):
     self._angle = angle
     self._scale = scale
     self._color = (c0, c1, c2)
-    self._velocity = (x_vel, y_vel)
+    self._velocity = np.array((x_vel, y_vel))
+    self._max_abs_vel = max_abs_vel
     self._is_barrier = is_barrier
     if is_barrier:
       self._color = (255, 255, 255)
@@ -122,10 +124,11 @@ class Sprite(object):
     old_position = self._position.copy()
     self._position += motion
     if self._move_noise:
-      self._position += np.random.normal(
-          loc=0.0, scale=self._move_noise, size=self._position.shape)
+      self._position += np.random.normal(loc=0.0, scale=self._move_noise, size=self._position.shape)
 
     if keep_in_frame:
+      if np.any(self._position >= 1.0) or np.any(self._position <=0.):
+        self.reverse_velocity(0.)
       self._position = np.clip(self._position, 0.0, 1.0)
     if barriers:
       for sprite in barriers:
@@ -133,14 +136,21 @@ class Sprite(object):
           continue
         elif prevent_intersect > 0 and np.linalg.norm(self._position - sprite.position) < prevent_intersect:
           self._position = old_position
+          self.reverse_velocity(0.)
           break
         elif sprite.contains_point(self._position):
           self._position = old_position
+          self.reverse_velocity(0.)
           break
 
-  def update_position(self, keep_in_frame=False):
+  def update_position(self, keep_in_frame=False, barriers=[], prevent_intersect=-1):
     """Update position based on velocity."""
-    self.move(self.velocity, keep_in_frame=keep_in_frame)
+    self.move(self.velocity, keep_in_frame=keep_in_frame, barriers=barriers, prevent_intersect=prevent_intersect)
+
+  def reverse_velocity(self, noise):
+    self._velocity *= -1 # bounce the sprite
+    self._velocity += np.random.normal(loc=[0., 0.], scale=noise)
+    self._velocity = np.clip(self._velocity, -self._max_abs_vel, self._max_abs_vel)
 
   def contains_point(self, point):
     """Check if the point is contained in the Sprite."""
@@ -260,6 +270,10 @@ class Sprite(object):
   @property
   def velocity(self):
     return self._velocity
+
+  def set_color(self, color):
+    self._color = color # e.g., (255, 255, 255)
+    return self
 
   @property
   def factors(self):
