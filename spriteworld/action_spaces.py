@@ -70,8 +70,9 @@ class SelectBounce(object):
     clicked_sprite = self.get_sprite_from_position(action, sprites)
     if clicked_sprite is not None:
       clicked_sprite.reverse_velocity(self._noise_scale)
+      
     for sprite in sprites:
-      sprite.update_position(keep_in_frame=True, barriers=barriers, prevent_intersect=self._prevent_intersect)
+      sprite.update_position(keep_in_frame=True, barriers=barriers, prevent_intersect=self._prevent_intersect, acted_on=(sprite is clicked_sprite))
     return 0.
 
   def sample(self):
@@ -156,6 +157,7 @@ class SelectMove(object):
       barriers = sprites
     else:
       barriers = []
+    
     noised_action = self.apply_noise_to_action(action)
     position = noised_action[:2]
     motion = self.get_motion(noised_action)
