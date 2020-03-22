@@ -53,6 +53,7 @@ class GymWrapper(object):
     self._last_render = None
     self._action_space = None
     self._observation_space = None
+    self.reward_range = (-np.inf, np.inf)
 
     # Reset Spriteworld to setup the observation_specs correctly
     self._env.reset()

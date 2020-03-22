@@ -149,7 +149,7 @@ class VectorizedPositions(abstract_renderer.AbstractRenderer):
       return np.array([sprite.position for sprite in sprites])
 
   def observation_spec(self):
-    return specs.Array(shape=(self._num_sprites,), dtype=np.float32)
+    return specs.Array(shape=(self._num_sprites*2,), dtype=np.float32)
 
 class FunctionOfVectorizedPositions(abstract_renderer.AbstractRenderer):
   """Aggregates positions of the sprites into an array."""
@@ -210,7 +210,7 @@ class VectorizedPositionsAndVelocities(abstract_renderer.AbstractRenderer):
       return np.array([np.concatenate((sprite.position, sprite.velocity)) for sprite in sprites])
 
   def observation_spec(self):
-    return specs.Array(shape=(self._num_sprites,), dtype=np.float32)
+    return specs.Array(shape=(self._num_sprites*4,), dtype=np.float32)
 
 
 class FunctionOfVectorizedPositionsAndVelocities(abstract_renderer.AbstractRenderer):

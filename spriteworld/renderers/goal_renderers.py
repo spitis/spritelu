@@ -78,7 +78,7 @@ class VectorizedGoalPositions(abstract_renderer.AbstractRenderer):
       (sprite._goal or self._render_nongoals)]).flatten()
 
   def observation_spec(self):
-    return specs.Array(shape=(self._num_sprites,), dtype=np.float32)
+    return specs.Array(shape=(self._num_sprites*2,), dtype=np.float32)
 
 
 class AchievedVectorizedPositions(VectorizedPositions):
