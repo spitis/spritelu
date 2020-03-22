@@ -124,10 +124,11 @@ class Success(abstract_renderer.AbstractRenderer):
 class VectorizedPositions(abstract_renderer.AbstractRenderer):
   """Aggregates positions of the sprites into an array."""
 
-  def __init__(self):
+  def __init__(self, flatten=False):
     """Constructor.
     """
     self._num_sprites = None
+    self._flatten = flatten
 
   def render(self, sprites=(), global_state=None):
     """Renders a list of sprites into an array where every two components is an xy position.
@@ -142,7 +143,10 @@ class VectorizedPositions(abstract_renderer.AbstractRenderer):
     # Set number of sprites so that observation_spec is callable
     self._num_sprites = len(sprites)
 
-    return np.array([sprite.position for sprite in sprites]).flatten()
+    if self._flatten:
+      return np.array([sprite.position for sprite in sprites]).flatten()
+    else:
+      return np.array([sprite.position for sprite in sprites])
 
   def observation_spec(self):
     return specs.Array(shape=(self._num_sprites,), dtype=np.float32)
@@ -181,10 +185,11 @@ class FunctionOfVectorizedPositions(abstract_renderer.AbstractRenderer):
 class VectorizedPositionsAndVelocities(abstract_renderer.AbstractRenderer):
   """Aggregates positions of the sprites into an array."""
 
-  def __init__(self):
+  def __init__(self, flatten=False):
     """Constructor.
     """
     self._num_sprites = None
+    self._flatten = flatten
 
   def render(self, sprites=(), global_state=None):
     """Renders a list of sprites into an array where every two components is an xy position.
@@ -199,7 +204,10 @@ class VectorizedPositionsAndVelocities(abstract_renderer.AbstractRenderer):
     # Set number of sprites so that observation_spec is callable
     self._num_sprites = len(sprites)
 
-    return np.array([np.concatenate((sprite.position, sprite.velocity)) for sprite in sprites]).flatten()
+    if self._flatten:
+      return np.array([np.concatenate((sprite.position, sprite.velocity)) for sprite in sprites]).flatten()
+    else:
+      return np.array([np.concatenate((sprite.position, sprite.velocity)) for sprite in sprites])
 
   def observation_spec(self):
     return specs.Array(shape=(self._num_sprites,), dtype=np.float32)
@@ -234,3 +242,44 @@ class FunctionOfVectorizedPositionsAndVelocities(abstract_renderer.AbstractRende
 
   def observation_spec(self):
     return self._observation_spec
+
+
+class TransitionEntanglementMask(abstract_renderer.AbstractRenderer):
+  """Returns a 0/1 mask of the abstract state dims, which shows which dims in the previous state affected the
+  current state dims."""
+
+  def __init__(self, state_size=4, action_size=2):
+    """Constructor.
+    """
+    self._num_sprites = None
+    self._state_size = state_size
+    self._action_size = action_size
+
+    assert state_size >= action_size, "at the moment only supports larger state than action"
+
+  def render(self, sprites=(), global_state=None):
+    """Renders a list of sprites into an array where every two components is an xy position.
+
+    Args:
+      sprites: a list of sprites
+      global_state: Unused global state.
+
+    Returns:
+      An array of sprite positions
+    """
+    # Set number of sprites so that observation_spec is callable
+    self._num_sprites = len(sprites)
+
+    if sprites[0].influenced_by_on_last_move is None:
+      return None
+
+    s = self._state_size
+
+    influences = [sprite.influenced_by_on_last_move[None].repeat(s, axis=0).repeat(s, axis=1)[:, :-(s-self._action_size) or None] for sprite in sprites]
+
+    influences.append(np.zeros_like(influences[0][:self._action_size])) # for the action; zero because action is not influenced by the state
+
+    return np.concatenate(influences, 0).T  # Rows represent sources, columns represent affected targets
+
+  def observation_spec(self):
+    return specs.Array(shape=(self._num_sprites,), dtype=np.float32)
