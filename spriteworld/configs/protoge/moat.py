@@ -22,8 +22,8 @@ def image_renderers():
 
 def disentangled_renderers():
   return {
-      'observation': spriteworld_renderers.VectorizedPositions(),
-      'achieved_goal': spriteworld_renderers.AchievedVectorizedPositions(),
+      'observation': spriteworld_renderers.VectorizedPositions(flatten=True),
+      'achieved_goal': spriteworld_renderers.AchievedVectorizedPositions(flatten=True),
       'desired_goal': spriteworld_renderers.VectorizedGoalPositions()
   }
 
@@ -34,8 +34,8 @@ def random_vector_renderers():
   fn = lambda a: np.dot(random_mtx[:len(a), :len(a)], a)
 
   return {
-      'observation': spriteworld_renderers.VectorizedPositions(),
-      'achieved_goal': spriteworld_renderers.AchievedFunctionOfVectorizedPositions(fn=fn),
+      'observation': spriteworld_renderers.VectorizedPositions(flatten=True),
+      'achieved_goal': spriteworld_renderers.AchievedFunctionOfVectorizedPositions(fn=fn, flatten=True),
       'desired_goal': spriteworld_renderers.FunctionOfVectorizedGoalPositions(fn=fn)
   }
 
@@ -95,4 +95,6 @@ def get_config(mode = None, *unused_args):
 def make_moat_env(config=None, seed=None):
   if config is None:
     config = get_config(mode='disentangled')
-  return GymWrapper(Environment(**config, seed=seed))
+  gym_env = GymWrapper(Environment(**config, seed=seed))
+  gym_env.compute_reward = lambda ag, g, info: -(np.linalg.norm(ag - g, axis=-1) > TERMINATE_DISTANCE).astype(np.float32)
+  return gym_env
