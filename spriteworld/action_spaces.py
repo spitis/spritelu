@@ -292,24 +292,25 @@ class Navigate(object):
   body.
 
   Each action is a vector in [-1, 1] x [-1, 1], which specifies the direction the
-  agent desires to move or accelerate in.
+  agent desires to move in.
   """
 
-  def __init__(self, step_size=0.05, action_noise_percent=0.1, motion_cost=1., accelerate=False):
+  def __init__(self, step_size=0.05, action_noise_percent=0.1, motion_cost=1., slow_zones=[]):
     """Constructor.
 
     Args:
       step_size: Fraction of the arena width the sprite moves for each step.
       motion_cost: Each step incurs cost motion_cost * step_size.
+      slow_zones: list of ((lower_x, lower_y), (upper_x, upper_y)) that define areas through which
+        things move slowly (20% of speed)
     """
     self._step_size = step_size
     self._motion_cost = motion_cost
     self._action_noise = action_noise_percent
-    if accelerate:
-      raise NotImplementedError
-    self._accelerate = accelerate
 
     self._action_spec = specs.BoundedArray((2,), np.float32, -1., 1.)
+
+    self._slow_zones = list(map(np.array, slow_zones))
     
   def get_body_sprite(self, sprites):
     """Return the sprite representing the agent's body."""
@@ -338,6 +339,14 @@ class Navigate(object):
         nonbarriers.append(sprite)
     return barriers, nonbarriers
 
+  def in_slow_zone(self, sprite):
+    res = False
+    for (lower, upper) in self._slow_zones:
+      if np.all(sprite.position > lower) and np.all(sprite.position < upper):
+        res=True
+        break
+    return res
+
   def step(self, action, sprites, keep_in_frame=True):
     """Take an action and move the sprites.
 
@@ -355,6 +364,9 @@ class Navigate(object):
 
     # Add action noise
     action *= (1 + np.random.uniform(low=-self._action_noise, high=self._action_noise, size=2))
+    agent = self.get_body_sprite(sprites)
+    if self.in_slow_zone(agent):
+      action *= 0.2 # 5x speed penalty in slow zones
 
     # If move is slow enough, move intersecting sprites
     if np.all(np.abs(action) < 0.8):
@@ -362,7 +374,6 @@ class Navigate(object):
         sprite.move(action * self._step_size, keep_in_frame=keep_in_frame, barriers=barriers)
 
     # Move agent body, rejecting bad moves
-    agent = self.get_body_sprite(sprites)
     agent.move(action * self._step_size, keep_in_frame=keep_in_frame, barriers=barriers)
 
     return -self._motion_cost

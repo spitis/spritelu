@@ -37,7 +37,8 @@ class Environment(dm_env.Environment):
                init_sprites,
                keep_in_frame=True,
                max_episode_length=1000,
-               metadata=None):
+               metadata=None,
+               seed=None):
     """Construct Spriteworld environment.
 
     Args:
@@ -58,6 +59,7 @@ class Environment(dm_env.Environment):
         terminated.
       metadata: Optional object to be added to the global_state.
     """
+    self.seed(seed)
     self._task = task
     self._action_space = action_space
     self._renderers = renderers
@@ -69,6 +71,9 @@ class Environment(dm_env.Environment):
     self._reset_next_step = True
     self._renderers_initialized = False
     self._metadata = metadata
+
+  def seed(self, seed=None):
+    np.random.seed(seed)
 
   def reset(self):
     self._sprites = self._init_sprites()

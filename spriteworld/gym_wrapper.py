@@ -133,3 +133,6 @@ class GymWrapper(object):
   def close(self):
     """Unused."""
     pass
+
+  def seed(self, seed=None):
+    self._env.seed(seed)
