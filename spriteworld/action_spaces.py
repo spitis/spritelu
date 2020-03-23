@@ -297,7 +297,7 @@ class Navigate(object):
   agent desires to move in.
   """
 
-  def __init__(self, step_size=0.05, action_noise_percent=0.1, motion_cost=1., slow_zones=[]):
+  def __init__(self, step_size=0.05, action_noise_percent=0.1, motion_cost=1., slow_zones=[], slow_factor=0.2):
     """Constructor.
 
     Args:
@@ -313,6 +313,7 @@ class Navigate(object):
     self._action_spec = specs.BoundedArray((2,), np.float32, -1., 1.)
 
     self._slow_zones = list(map(np.array, slow_zones))
+    self._slow_factor = slow_factor
     
   def get_body_sprite(self, sprites):
     """Return the sprite representing the agent's body."""
@@ -368,7 +369,7 @@ class Navigate(object):
     action *= (1 + np.random.uniform(low=-self._action_noise, high=self._action_noise, size=2))
     agent = self.get_body_sprite(sprites)
     if self.in_slow_zone(agent):
-      action *= 0.2 # 5x speed penalty in slow zones
+      action *= self._slow_factor
 
     # If move is slow enough, move intersecting sprites
     if np.all(np.abs(action) < 0.8):

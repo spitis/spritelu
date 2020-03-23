@@ -9,7 +9,7 @@ from spriteworld import sprite_generators
 
 import os, copy, numpy as np
 
-TERMINATE_DISTANCE = 0.075
+TERMINATE_DISTANCE = 0.05
 
 
 def image_renderers():
@@ -54,23 +54,29 @@ def get_config(mode = None, *unused_args):
   gen_list = []
 
   shared_factors = distribs.Product([
-      distribs.Continuous('x', 0.05, 0.35),
-      distribs.Continuous('y', 0.05, 0.35),
+      distribs.Continuous('x', 0.05, 0.15),
+      distribs.Continuous('y', 0.05, 0.15),
       distribs.Continuous('c0', 25, 230),
       distribs.Continuous('c1', 25, 230),
       distribs.Continuous('c2', 25, 230)
   ])
 
   goal_loc = distribs.Product([
-      distribs.Continuous('goal_x', 0.65, 0.95),
-      distribs.Continuous('goal_y', 0.65, 0.95),
+      distribs.Continuous('goal_x', 0.85, 0.95),
+      distribs.Continuous('goal_y', 0.85, 0.95),
   ])
 
   agent_factors = distribs.Product([shared_factors, distribs.Discrete('shape', ['star_5']), goal_loc])
 
   agent_sprite_gen = sprite_generators.generate_sprites(agent_factors, num_sprites=1)
 
-  action_space = action_spaces.Navigate(slow_zones=[((0.4, 0.4), (1., 0.6)), ((0.4, 0.4), (0.6, 1.))])
+  action_space = action_spaces.Navigate(slow_zones=[
+    ((0.5, 0.5), (1., 0.8)), 
+    ((0.5, 0.5), (0.8, 1.)),
+    ((0., 0.9), (0.8, 1.)),
+    ((0.9, 0.), (1., 0.8))
+    ],
+    )
 
   if mode == 'disentangled':
     renderers = disentangled_renderers()
@@ -84,7 +90,7 @@ def get_config(mode = None, *unused_args):
       'action_space': action_space,
       'renderers': renderers,
       'init_sprites': agent_sprite_gen,
-      'max_episode_length': 50,
+      'max_episode_length': 100,
       'metadata': {
           'name': os.path.basename(__file__)
       }
