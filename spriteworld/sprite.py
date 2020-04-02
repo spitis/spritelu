@@ -134,7 +134,8 @@ class Sprite(object):
         self.reverse_velocity(0.)
       self._position = np.clip(self._position, 0.0, 1.0)
 
-    influenced_by_on_last_move = np.zeros((len(barriers) + 1,))
+    influenced_by_on_last_move = np.zeros((len(barriers) + 1,),
+                                          dtype=np.float32)
 
     hit_something = False
     if barriers:
