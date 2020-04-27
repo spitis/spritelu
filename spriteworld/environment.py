@@ -38,7 +38,8 @@ class Environment(dm_env.Environment):
                keep_in_frame=True,
                max_episode_length=1000,
                metadata=None,
-               seed=None):
+               seed=None,
+               reset_on_success=True):
     """Construct Spriteworld environment.
 
     Args:
@@ -71,6 +72,7 @@ class Environment(dm_env.Environment):
     self._reset_next_step = True
     self._renderers_initialized = False
     self._metadata = metadata
+    self._reset_on_success = reset_on_success
 
   def seed(self, seed=None):
     np.random.seed(seed)
@@ -87,7 +89,8 @@ class Environment(dm_env.Environment):
   def should_terminate(self):
     timeout = self._step_count >= self._max_episode_length
     out_of_frame = any([sprite.out_of_frame for sprite in self._sprites])
-    return self.success() or out_of_frame or timeout
+    success_reset = self.success() if self._reset_on_success else False
+    return success_reset or out_of_frame or timeout
 
   def step(self, action):
     """Step the environment with an action."""

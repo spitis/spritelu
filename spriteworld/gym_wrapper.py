@@ -106,7 +106,7 @@ class GymWrapper(object):
     obs = self._process_obs(time_step.observation)
     reward = time_step.reward or 0
     done = time_step.last()
-    info = {'discount': time_step.discount}
+    info = {'discount': time_step.discount, 'is_success': self._env.success()}
     return obs, reward, done, info
 
   def reset(self):

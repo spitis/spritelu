@@ -94,7 +94,7 @@ simple_config = {
 
 def main(_):
   config = importlib.import_module(FLAGS.config)
-  config = config.get_config(FLAGS.mode, FLAGS.level)
+  config = config.get_config(mode=FLAGS.mode, level=FLAGS.level)
   demo_goal_ui.setup_run_ui(config, FLAGS.render_size, False,
                        FLAGS.anti_aliasing)
 
