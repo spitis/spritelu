@@ -29,6 +29,7 @@ from absl import logging
 from matplotlib import gridspec
 import matplotlib.pylab as plt
 import numpy as np
+import time
 
 from spriteworld import action_spaces
 from spriteworld import environment
@@ -189,13 +190,27 @@ class HumanNavigateAction(object):
     def _onclick(event):
       if event.inaxes and event.inaxes == ui.ax_image:
         # Map the click into axis-fraction positions (origin at bottom-left).
-        self._click = event.inaxes.transAxes.inverted().transform(
-            (event.x, event.y))
+        self._click = event.inaxes.transAxes.inverted().transform((event.x, event.y))
       else:
         self._click = None
       return
 
+    def _onrelease(event):
+      self._click = None
+      return
+
+    def _onmove(event):
+      if self._click is not None:
+        if event.inaxes and event.inaxes == ui.ax_image:
+          # Map the click into axis-fraction positions (origin at bottom-left).
+          self._click = event.inaxes.transAxes.inverted().transform((event.x, event.y))
+        else:
+          self._click = None
+      return
+
+    ui.register_callback('button_release_event', _onrelease)
     ui.register_callback('button_press_event', _onclick)
+    ui.register_callback('motion_notify_event', _onmove)
 
   def begin_episode(self):
     logging.info('Starting episode')
@@ -206,15 +221,15 @@ class HumanNavigateAction(object):
 
     def _get_click():
       """Get mouse click."""
-      click = None
+      click = self._click
+      if click is not None:
+        plt.waitforbuttonpress(timeout=0.05)
       while click is None:
         x = plt.waitforbuttonpress(timeout=self._timeout)
         if x is None:
-          logging.info('Timed out. You took longer than %d seconds to click.',
-                       self._timeout)
+          logging.info('Timed out. You took longer than %d seconds to click.', self._timeout)
         elif x:
-          logging.info('You pressed a key, but were supposed to click with the '
-                       'mouse.')
+          logging.info('You pressed a key, but were supposed to click with the mouse.')
           self.help()
         else:
           click = self._click

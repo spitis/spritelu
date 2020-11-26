@@ -74,11 +74,14 @@ class VectorizedGoalPositions(abstract_renderer.AbstractRenderer):
     # Set number of sprites so that observation_spec is callable
     self._num_sprites = len(sprites)
 
-    return np.array([sprite.goal_position for sprite in sprites if 
+    res =  np.array([sprite.goal_position for sprite in sprites if 
       (sprite._goal or self._render_nongoals)]).flatten()
+    self._render_shape = res.shape
+
+    return res
 
   def observation_spec(self):
-    return specs.Array(shape=(self._num_sprites*2,), dtype=np.float32)
+    return specs.Array(shape=self._render_shape, dtype=np.float32)
 
 
 class AchievedVectorizedPositions(VectorizedPositions):

@@ -118,3 +118,6 @@ def get_config(num_goal_objects=1, num_barriers=0, num_distractors=0, agent_has_
   }
 
   return config
+
+def make_sprite_placement_env():
+  #TODO See Moat Env
