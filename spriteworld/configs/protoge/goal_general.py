@@ -27,7 +27,7 @@ def random_vector_renderers():
     'desired_goal': spriteworld_renderers.FunctionOfVectorizedGoalPositions(fn=fn)
   }
 
-def get_config(num_goal_objects=1, num_barriers=0, num_distractors=0, agent_has_goal=False):
+def get_config(num_goal_objects=1, num_barriers=0, num_distractors=0, agent_has_goal=False, scale=0.1):
   """Generate environment config.
 
   Args:
@@ -47,7 +47,8 @@ def get_config(num_goal_objects=1, num_barriers=0, num_distractors=0, agent_has_
     distribs.Continuous('y', 0.1, 0.9),
     distribs.Continuous('c0', 25, 230),
     distribs.Continuous('c1', 25, 230),
-    distribs.Continuous('c2', 25, 230)
+    distribs.Continuous('c2', 25, 230),
+    distribs.Discrete('scale', [scale])
   ])
 
   goal_loc = distribs.Product([
@@ -59,7 +60,7 @@ def get_config(num_goal_objects=1, num_barriers=0, num_distractors=0, agent_has_
   goal_factors = distribs.Product([
     shared_factors,
     distribs.Discrete('shape', ['square', 'triangle', 'circle']),
-    goal_loc,
+    goal_loc
   ])
   goal_sprite_gen = sprite_generators.generate_sprites(goal_factors, num_sprites=num_goal_objects)
   gen_list.append(goal_sprite_gen )
