@@ -1,33 +1,8 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-import os
-from spriteworld import environment
-from spriteworld import sprite
-from spriteworld import tasks
-from spriteworld import action_spaces
-from spriteworld import renderers as spriteworld_renderers
-from spriteworld import factor_distributions as distribs
-from spriteworld import sprite_generators
-from spriteworld.configs.cobra import common
-
+from spriteworld import environment, sprite, tasks, action_spaces, sprite_generators
+from spriteworld import renderers as spriteworld_renderers, factor_distributions as distribs
 import os, copy, numpy as np
 
 TERMINATE_DISTANCE = 0.075
-
-MODES_NUM_DISTRACTORS = {
-    'train': 1,
-    'test': 2,
-}
-MODES_NUM_GOALS = {
-    'train':1,
-    'test':1
-}
-MODES_NUM_BARRIERS = {
-    'train':1,
-    'test':1
-}
 
 def image_renderers():
   return {
@@ -44,22 +19,22 @@ def disentangled_renderers():
   }
 
 def random_vector_renderers():
-
   random_mtx = (np.random.rand(100, 100) - 0.5)*2.
   fn=lambda a: np.dot(random_mtx[:len(a),:len(a)], a)
-
   return {
     'observation': spriteworld_renderers.VectorizedPositions(),
     'achieved_goal': spriteworld_renderers.AchievedFunctionOfVectorizedPositions(fn=fn),
     'desired_goal': spriteworld_renderers.FunctionOfVectorizedGoalPositions(fn=fn)
   }
 
-def get_config(mode='train', level=0):
+def get_config(num_goal_objects=1, num_barriers=0, num_distractors=0, agent_has_goal=False):
   """Generate environment config.
 
   Args:
-    mode: 'train' or 'test'.
-    level: int in [0,5] to vary the difficulty
+    num_goal_objects: number of objects that need to be placed
+    num_barriers: number of random barriers to spawn
+    num_distractors: number of distractor objects (do not need to be placed)
+    agent_has_goal: Whether or not the agent also needs to be placed at a target location
 
   Returns:
     config: Dictionary defining task/environment configuration. Can be fed as
@@ -80,59 +55,47 @@ def get_config(mode='train', level=0):
     distribs.Continuous('goal_y', 0.1, 0.9),
   ])
 
-  if level > 0:
-    # Agent is not part of goal
+  ## OBJECTS
+  goal_factors = distribs.Product([
+    shared_factors,
+    distribs.Discrete('shape', ['square', 'triangle', 'circle']),
+    goal_loc,
+  ])
+  goal_sprite_gen = sprite_generators.generate_sprites(goal_factors, num_sprites=num_goal_objects)
+  gen_list.append(goal_sprite_gen )
+
+  ## BARRIERS
+  barrier_factors = distribs.Product([
+    shared_factors,
+    distribs.Continuous('barrier_stretch', 2., 10.),
+    distribs.Continuous('angle', 0., 360),
+    distribs.Discrete('is_barrier', [True])
+  ])
+  barrier_sprite_gen = sprite_generators.generate_sprites(barrier_factors, num_sprites=num_barriers)
+  gen_list.append(barrier_sprite_gen)
+
+  ## DISTRACTORS
+  distractor_factors = distribs.Product([
+    shared_factors,
+    distribs.Discrete('shape', ['square', 'triangle', 'circle']),
+  ])
+  distractor_sprite_gen = sprite_generators.generate_sprites(distractor_factors, num_sprites=num_distractors)
+  gen_list.append(distractor_sprite_gen)
+
+  ## AGENT
+  if agent_has_goal:
     agent_factors = distribs.Product([
       shared_factors,
       distribs.Discrete('shape', ['star_5']),
-    ])
-
-    # Have goal objects aside from the agent
-    goal_factors = distribs.Product([
-      shared_factors,
       goal_loc,
-      distribs.Discrete('shape', ['square', 'triangle', 'circle']),
     ])
-    goal_sprite_gen = sprite_generators.generate_sprites(
-      goal_factors, num_sprites=MODES_NUM_GOALS[mode])
-    gen_list.append(goal_sprite_gen )
-
-    if level > 1:
-      # Have barriers
-      barrier_factors = distribs.Product([
-        shared_factors,
-        distribs.Continuous('barrier_stretch', 2., 10.),
-        distribs.Continuous('angle', 0., 360),
-        distribs.Discrete('is_barrier', [True])
-      ])
-      barrier_sprite_gen = sprite_generators.generate_sprites(
-        barrier_factors, num_sprites=MODES_NUM_BARRIERS[mode])
-      gen_list.append(barrier_sprite_gen)
-
-    if level > 2:
-      # Have distractor objects
-      distractor_factors = distribs.Product([
-        shared_factors,
-        distribs.Discrete('shape', ['square', 'triangle', 'circle']),
-      ])
-      distractor_sprite_gen = sprite_generators.generate_sprites(
-        distractor_factors, num_sprites=MODES_NUM_DISTRACTORS[mode])
-      gen_list.append(distractor_sprite_gen)
-
   else:
-    # Only the agent is the goal
     agent_factors = distribs.Product([
       shared_factors,
       distribs.Discrete('shape', ['star_5']),
-      goal_loc
     ])
+  agent_sprite_gen = sprite_generators.generate_sprites(agent_factors, num_sprites=1)
 
-
-  agent_sprite_gen = sprite_generators.generate_sprites(
-      agent_factors, num_sprites=1)
-
-
-  # TODO: Sample the number of sprites as well
   sprite_gen = sprite_generators.chain_generators(*gen_list)
 
   # Randomize sprite ordering to eliminate any task information from occlusions
@@ -150,8 +113,6 @@ def get_config(mode='train', level=0):
     'max_episode_length': 1000,
     'metadata': {
         'name': os.path.basename(__file__),
-        'mode': mode
-
     }
   }
 
