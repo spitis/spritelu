@@ -223,7 +223,7 @@ class HumanNavigateAction(object):
       """Get mouse click."""
       click = self._click
       if click is not None:
-        plt.waitforbuttonpress(timeout=0.05)
+        plt.waitforbuttonpress(timeout=0.01)
       click = self._click
       while click is None:
         x = plt.waitforbuttonpress(timeout=self._timeout)
